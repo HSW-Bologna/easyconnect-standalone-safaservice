@@ -5,6 +5,12 @@
  *  Macro riguardanti la configurazione dell'applicazione
  */
 
-#define APP_CONFIG_FIRMWARE_VERSION "0.0.1"
+#define APP_CONFIG_FIRMWARE_VERSION "0.0.3"
+
+#define APP_CONFIG_BASE_TASK_STACK_SIZE 512
+
+
+#define APP_CONFIG_HOURS_WARNING 8000
+#define APP_CONFIG_HOURS_ALARM   10000
 
 #endif

@@ -4,6 +4,8 @@
 #include "model/model.h"
 
 
-void controller_init(model_t *model);
+void controller_init(mut_model_t *pmodel);
+void controller_manage(mut_model_t *pmodel);
+
 
 #endif

@@ -7,3 +7,15 @@
 [submodule "simulator/freertos-simulator"]
 	path = simulator/freertos-simulator
 	url = https://github.com/Maldus512/freertos-simulator.git
+[submodule "components/c-debounce"]
+	path = components/c-debounce
+	url = https://github.com/Maldus512/c-debounce.git
+[submodule "components/easyconnect-device"]
+	path = components/easyconnect-device
+	url = https://github.com/HSW-Bologna/easyconnect-device.git
+[submodule "components/liblightmodbus-esp"]
+	path = components/liblightmodbus-esp
+	url = https://github.com/Jacajack/liblightmodbus-esp.git
+[submodule "components/c-watcher"]
+	path = components/c-watcher
+	url = https://github.com/Maldus512/c-watcher.git
