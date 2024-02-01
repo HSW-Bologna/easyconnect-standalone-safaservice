@@ -33,7 +33,7 @@ void controller_manage(mut_model_t *pmodel) {
 
         modbus_read_device_state(modbus_address);
 
-        if (modbus_address == 3) {
+        if (modbus_address == 4) {
             modbus_address = 1;
             info_counter++;
         } else {
@@ -56,7 +56,7 @@ void controller_manage(mut_model_t *pmodel) {
     }
 
     pmodel->safety_ok = safety_ok();
-    interface_set_safety(!pmodel->safety_ok);
+    interface_set_safety(!model_is_safety_ok(pmodel));
 
     modbus_response_t response;
     if (modbus_get_response(&response)) {
@@ -77,7 +77,7 @@ void controller_manage(mut_model_t *pmodel) {
                 break;
 
             case MODBUS_RESPONSE_CODE_WORK_HOURS:
-                ESP_LOGI(TAG, "Device %i has worked for %0ih", response.address, response.work_hours);
+                ESP_LOGD(TAG, "Device %i has worked for %0ih", response.address, response.work_hours);
                 model_set_ballast_work_hours(pmodel, response.address, response.work_hours);
                 break;
 

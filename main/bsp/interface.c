@@ -101,7 +101,8 @@ void interface_set_led_state_on(interface_led_t led) {
 }
 
 
-void interface_set_led_state_blink(interface_led_t led) {
+void interface_set_led_state_blink(interface_led_t led, unsigned long millis) {
+    xTimerChangePeriod(timers[led], pdMS_TO_TICKS(millis), portMAX_DELAY);
     xTimerStart(timers[led], portMAX_DELAY);
 }
 

@@ -10,6 +10,8 @@
 
 static void sequence_changed_cb(void *old_value, const void *new_value, watcher_size_t size, void *user_ptr, void *arg);
 static void ballast_changed_cb(void *old_value, const void *new_value, watcher_size_t size, void *user_ptr, void *arg);
+static void ballast_comm_changed_cb(void *old_value, const void *new_value, watcher_size_t size, void *user_ptr,
+                                    void *arg);
 static void work_hours_changed_cb(void *old_value, const void *new_value, watcher_size_t size, void *user_ptr,
                                   void *arg);
 static void update_all_ballast(model_t *pmodel, int value);
@@ -23,22 +25,37 @@ void observer_init(model_t *pmodel) {
     WATCHER_INIT_STD(&watcher, (void *)pmodel);
 
     WATCHER_ADD_ENTRY(&watcher, &pmodel->sequence, sequence_changed_cb, NULL);
-    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].comm_ok, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_1);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].comm_ok, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_1);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].present, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_1);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].state, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_1);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].alarms, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_1);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].class, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_1);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[0].work_hours, work_hours_changed_cb, NULL);
-    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].comm_ok, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_2);
+
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].comm_ok, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_2);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].present, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_2);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].state, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_2);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].alarms, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_2);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].class, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_2);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[1].work_hours, work_hours_changed_cb, NULL);
-    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].comm_ok, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_3);
+
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].comm_ok, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_3);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].present, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_3);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].state, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_3);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].alarms, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_3);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].class, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_3);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[2].work_hours, work_hours_changed_cb, NULL);
-    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].comm_ok, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_4);
+
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].comm_ok, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_4);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].present, ballast_comm_changed_cb,
+                      (void *)(uintptr_t)INTERFACE_LED_4);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].state, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_4);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].alarms, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_4);
     WATCHER_ADD_ENTRY(&watcher, &pmodel->ballast[3].class, ballast_changed_cb, (void *)(uintptr_t)INTERFACE_LED_4);
@@ -51,16 +68,7 @@ void observer_init(model_t *pmodel) {
 
 
 void observer_manage(void) {
-    static unsigned long ts = 0;
-
     watcher_watch(&watcher, get_millis());
-
-
-    if (is_expired(ts, get_millis(), 4000)) {
-        // Every 4 seconds refresh everything
-        watcher_trigger_all(&watcher);
-        ts = get_millis();
-    }
 }
 
 
@@ -73,19 +81,60 @@ static void ballast_changed_cb(void *old_value, const void *new_value, watcher_s
     interface_led_t ballast = (interface_led_t)(uintptr_t)arg;
 
     if (model_is_ballast_configured_correctly(pmodel, ballast)) {
-        if (pmodel->ballast[ballast].state == 0) {
-            ESP_LOGD(TAG, "Ballast %i off", ballast);
+        if (pmodel->ballast[ballast].state == 0 && !model_ballast_should_be_on(pmodel, ballast)) {
+            ESP_LOGD(TAG, "Ballast %i off (%i %i)", ballast, pmodel->sequence,
+                     !model_ballast_should_be_on(pmodel, ballast));
             interface_set_led_state_off(ballast);
         } else if (pmodel->ballast[ballast].alarms) {
             ESP_LOGD(TAG, "Ballast %i with alarms", ballast);
-            interface_set_led_state_blink(ballast);
+            interface_set_led_state_blink(ballast, 500);
         } else {
             ESP_LOGD(TAG, "Ballast %i on", ballast);
             interface_set_led_state_on(ballast);
         }
     } else {
         ESP_LOGD(TAG, "Ballast %i error", ballast);
-        interface_set_led_state_off(ballast);
+        if (!pmodel->ballast[ballast].comm_ok && model_ballast_present(pmodel, ballast)) {
+            interface_set_led_state_blink(ballast, 100);
+        } else {
+            interface_set_led_state_off(ballast);
+        }
+    }
+}
+
+
+static void ballast_comm_changed_cb(void *old_value, const void *new_value, watcher_size_t size, void *user_ptr,
+                                    void *arg) {
+    (void)old_value;
+    (void)new_value;
+    (void)size;
+
+    model_t        *pmodel  = user_ptr;
+    interface_led_t ballast = (interface_led_t)(uintptr_t)arg;
+
+    if (model_is_ballast_configured_correctly(pmodel, ballast)) {
+        if (pmodel->ballast[ballast].state == 0 && !model_ballast_should_be_on(pmodel, ballast)) {
+            ESP_LOGD(TAG, "Ballast %i off (%i %i)", ballast, pmodel->sequence,
+                     !model_ballast_should_be_on(pmodel, ballast));
+            interface_set_led_state_off(ballast);
+        } else if (pmodel->ballast[ballast].alarms) {
+            ESP_LOGD(TAG, "Ballast %i with alarms", ballast);
+            interface_set_led_state_blink(ballast, 500);
+        } else {
+            ESP_LOGD(TAG, "Ballast %i on", ballast);
+            interface_set_led_state_on(ballast);
+        }
+    } else {
+        ESP_LOGD(TAG, "Ballast %i error", ballast);
+        if (!pmodel->ballast[ballast].comm_ok && model_ballast_present(pmodel, ballast)) {
+            interface_set_led_state_blink(ballast, 100);
+        } else {
+            interface_set_led_state_off(ballast);
+        }
+    }
+
+    if (model_ballast_should_be_on(pmodel, ballast)) {
+        modbus_set_device_output(ballast + 1, 1, 0);
     }
 }
 
@@ -151,6 +200,7 @@ static void sequence_changed_cb(void *old_value, const void *new_value, watcher_
             break;
 
         case BALLAST_SEQUENCE_DONE:
+            update_all_ballast(pmodel, 1);
             break;
     }
 }

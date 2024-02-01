@@ -10,7 +10,7 @@ static const unsigned long SEQUENCE_PERIOD_MS = 1000;
 void model_updater_manage(mut_model_t *pmodel) {
     assert(pmodel != NULL);
 
-    if (pmodel->safety_ok && !model_get_working_hours_alarm(pmodel) && model_are_all_ballast_working(pmodel)) {
+    if (model_is_safety_ok(pmodel) && !model_get_working_hours_alarm(pmodel)) {
         switch (pmodel->sequence) {
             case BALLAST_SEQUENCE_NONE:
                 pmodel->sequence    = BALLAST_SEQUENCE_1;

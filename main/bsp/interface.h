@@ -19,7 +19,7 @@ typedef enum {
 void    interface_init(void);
 void    interface_set_led_state_off(interface_led_t led);
 void    interface_set_led_state_on(interface_led_t led);
-void    interface_set_led_state_blink(interface_led_t led);
+void    interface_set_led_state_blink(interface_led_t led, unsigned long millis);
 void    interface_set_warning_alarm_off(void);
 void    interface_set_warning(void);
 void    interface_set_alarm(void);

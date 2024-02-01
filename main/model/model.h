@@ -17,8 +17,17 @@ typedef enum {
     BALLAST_SEQUENCE_DONE,
 } ballast_sequence_t;
 
+
+typedef enum {
+    BALLAST_PRESENCE_UNKNOWN = 0,
+    BALLAST_PRESENCE_FOUND,
+    BALLAST_PRESENCE_MISSING,
+} ballast_presence_t;
+
+
 typedef struct {
     struct {
+        uint8_t present;
         uint8_t comm_ok;
         uint16_t class;
         uint16_t alarms;
@@ -44,6 +53,8 @@ uint8_t model_is_ballast_configured_correctly(model_t *pmodel, size_t ballast);
 void    model_set_ballast_class(mut_model_t *pmodel, uint8_t address, uint16_t class);
 uint8_t model_are_all_ballast_working(model_t *pmodel);
 uint8_t model_is_safety_ok(model_t *pmodel);
+uint8_t model_ballast_should_be_on(model_t *pmodel, size_t ballast);
+uint8_t model_ballast_present(model_t *pmodel, size_t ballast);
 
 
 #endif
