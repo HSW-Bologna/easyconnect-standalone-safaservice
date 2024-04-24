@@ -51,8 +51,6 @@ void modbus_read_device_info(uint8_t address);
 void modbus_read_device_messages(uint8_t address, uint8_t device_model);
 void modbus_read_device_inputs(uint8_t address);
 void modbus_set_device_output(uint8_t address, uint8_t value, uint8_t bypass);
-void modbus_automatic_commissioning(uint16_t expected_devices);
-int  modbus_automatic_commissioning_done(unsigned long millis);
 int  modbus_get_response(modbus_response_t *response);
 void modbus_set_class_output(uint16_t class, uint8_t value, uint8_t bypass);
 void modbus_scan(void);

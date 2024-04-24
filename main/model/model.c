@@ -15,10 +15,12 @@ void model_init(mut_model_t *pmodel) {
     assert(pmodel != NULL);
 
     for (size_t i = 0; i < MODBUS_MAX_DEVICES; i++) {
-        pmodel->ballast[i].comm_ok = 0;
-        pmodel->ballast[i].alarms  = 0;
-        pmodel->ballast[i].state   = 0;
-        pmodel->ballast[i].class   = 0;
+        pmodel->ballast[i].present    = BALLAST_PRESENCE_UNKNOWN;
+        pmodel->ballast[i].comm_ok    = 0;
+        pmodel->ballast[i].class      = 0;
+        pmodel->ballast[i].alarms     = 0;
+        pmodel->ballast[i].state      = 0;
+        pmodel->ballast[i].work_hours = 0;
     }
 
     pmodel->sequence    = BALLAST_SEQUENCE_1;

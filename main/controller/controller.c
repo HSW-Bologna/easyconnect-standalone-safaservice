@@ -26,7 +26,7 @@ void controller_manage(mut_model_t *pmodel) {
     static uint8_t       modbus_address = 1;
 
     if (is_expired(modbus_ts, get_millis(), 200)) {
-        if ((info_counter % 50) == 0) {
+        if ((info_counter % 35) == 0) {
             modbus_read_device_work_hours(modbus_address);
             modbus_read_device_info(modbus_address);
         }
